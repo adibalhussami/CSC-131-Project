@@ -1,0 +1,23 @@
+# Raw HTML exports (Discord/Smartsheet dumps, not meant for the repo)
+*Project - Information - notes-resources*.html
+*Project - Information - smartsheet*.html
+*Project - Text Channels - homework-help*.html
+
+# Node / Next.js (waste d)
+**/node_modules/
+**/.next/
+**/.env
+!**/.env.example
+**/npm-debug.log*
+
+# Java / Maven (waste-dashboard)
+waste-dashboard/target/
+waste-dashboard/data/
+
+# Misc
+*.log
+*.trace.db
+*.mv.db
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,395 @@
+:root {
+    --bg: #15121f;
+    --banner-start: #3a1f54;
+    --banner-end: #9c3468;
+    --card: #1e1b2e;
+    --card-hover: #242037;
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #f1eefb;
+    --muted: #9a93bb;
+    --accent: #8b7bf7;
+    --accent-soft: rgba(139, 123, 247, 0.18);
+    --green: #34d399;
+    --green-bg: rgba(52, 211, 153, 0.15);
+    --yellow: #fbbf24;
+    --yellow-bg: rgba(251, 191, 36, 0.15);
+    --red: #f87171;
+    --red-bg: rgba(248, 113, 113, 0.15);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    margin: 0;
+}
+
+a {
+    color: var(--accent);
+}
+
+.app-topbar {
+    align-items: center;
+    background: linear-gradient(120deg, var(--banner-start), var(--banner-end));
+    display: flex;
+    gap: 24px;
+    padding: 16px 28px;
+}
+
+.app-brand {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.app-nav-links {
+    display: flex;
+    flex: 1;
+    gap: 6px;
+}
+
+.app-nav-links a {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    color: #f3effc;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 7px 16px;
+    text-decoration: none;
+}
+
+.app-nav-links a:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.app-nav-login form {
+    display: inline;
+}
+
+.app-nav-login button,
+.app-nav-login a {
+    background: rgba(0, 0, 0, 0.25);
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 7px 16px;
+    text-decoration: none;
+}
+
+main {
+    margin: 0 auto;
+    max-width: 1280px;
+    padding: 28px;
+}
+
+.page-eyebrow {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 0.82rem;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.page-eyebrow .dot {
+    background: var(--green);
+    border-radius: 50%;
+    display: inline-block;
+    height: 8px;
+    width: 8px;
+}
+
+.page-title {
+    font-size: 1.7rem;
+    margin: 0 0 20px;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+}
+
+.scorecards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.scorecard {
+    flex: 0 0 auto;
+    height: 140px;
+    min-height: 110px;
+    min-width: 170px;
+    width: 210px;
+}
+
+.scorecard .label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.scorecard .value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.scorecard .spark {
+    height: 36px;
+    margin-top: 10px;
+}
+
+.charts-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    flex: 0 0 auto;
+    position: relative;
+    height: 340px;
+    min-height: 260px;
+    min-width: 340px;
+    width: 460px;
+}
+
+.chart-card h2 {
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin: 0 0 14px;
+}
+
+
+.resizable {
+    overflow: auto;
+    resize: both;
+}
+
+.resizable[draggable="true"] {
+    cursor: grab;
+}
+
+.resizable.dragging {
+    opacity: 0.45;
+}
+
+.layout-toolbar {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin: -6px 0 16px;
+}
+
+.layout-hint {
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.status-chip {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    text-transform: uppercase;
+}
+
+.status-green {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.status-yellow {
+    background: var(--yellow-bg);
+    color: var(--yellow);
+}
+
+.status-red {
+    background: var(--red-bg);
+    color: var(--red);
+}
+
+.filter-bar {
+    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.filter-bar label {
+    color: var(--muted);
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.filter-bar select,
+.filter-bar input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 7px 8px;
+}
+
+.filter-bar button {
+    background: var(--accent);
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 8px 16px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border-bottom: 1px solid var(--border);
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+tr.needs-attention {
+    background: var(--red-bg);
+}
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+}
+
+.btn {
+    background: var(--accent);
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: 600;
+    padding: 9px 16px;
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+form.record-form {
+    display: grid;
+    gap: 16px;
+    max-width: 520px;
+}
+
+form.record-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+form.record-form select,
+form.record-form input,
+form.record-form textarea {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-sizing: border-box;
+    color: var(--text);
+    padding: 9px;
+    width: 100%;
+}
+
+.checkbox-row {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.checkbox-row input {
+    width: auto;
+}
+
+.banner {
+    background: var(--green-bg);
+    border-radius: 8px;
+    color: var(--green);
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+}
+
+.empty-state {
+    color: var(--muted);
+    padding: 24px 0;
+    text-align: center;
+}
+
+.login-panel {
+    margin: 60px auto 0;
+    max-width: 340px;
+}
+
+.login-panel label {
+    display: block;
+    font-weight: 700;
+    margin: 14px 0 5px;
+}
+
+.login-panel input,
+.login-panel button {
+    box-sizing: border-box;
+    padding: 8px;
+    width: 100%;
+}
+
+.login-panel input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+}
+
+.login-panel button {
+    background: var(--accent);
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    margin-top: 16px;
+}
+
+.login-message {
+    color: var(--red);
+    font-weight: 700;
+    margin: 12px 0;
+}

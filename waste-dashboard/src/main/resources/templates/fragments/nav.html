@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="appNav" class="app-topbar">
+    <a class="app-brand" th:href="@{/}">CSC 131 Waste Dashboard</a>
+    <nav class="app-nav-links">
+        <a th:href="@{/}">Dashboard</a>
+        <a th:href="@{/records/new}">Log a Pickup</a>
+        <a th:href="@{/records}">All Records</a>
+    </nav>
+    <div class="app-nav-login">
+        <form th:if="${adminLoggedIn}" th:action="@{/logout}" method="post">
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit">Log Out</button>
+        </form>
+        <a th:unless="${adminLoggedIn}" th:href="@{/login}">Admin Login</a>
+    </div>
+</header>
+</body>
+</html>

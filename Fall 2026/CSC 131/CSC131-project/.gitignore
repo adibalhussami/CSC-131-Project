@@ -10,9 +10,9 @@
 !**/.env.example
 **/npm-debug.log*
 
-# Java / Maven (waste-dashboard)
-waste-dashboard/target/
-waste-dashboard/data/
+# Java / Maven (waste-dashboard -Kyle)
+waste-dashboard -Kyle/target/
+waste-dashboard -Kyle/data/
 
 # Misc
 *.log

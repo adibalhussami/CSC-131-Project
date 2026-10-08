@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum WasteStream {
+  LANDFILL
+  RECYCLING
+  ORGANICS
+}
+
+enum ContaminationLevel {
+  NONE
+  A_LITTLE
+  A_LOT
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String // bcrypt hash, never the plain password
+  createdAt    DateTime @default(now())
+
+  @@map("app_user")
+}
+
+// Fullness status (GREEN/YELLOW/RED) is derived from fullnessPercent in lib/records.ts.
+model PickupRecord {
+  id              Int                @id @default(autoincrement())
+  collectionDate  DateTime           @default(now())
+  building        String
+  location        String
+  binId           String?
+  driverName      String
+  wasteStream     WasteStream
+  fullnessPercent Int
+  contamination   ContaminationLevel
+  overflow        Boolean            @default(false)
+  comments        String?            @db.VarChar(1000)
+
+  @@index([collectionDate])
+  @@map("pickup_record")
+}
+
+// A physical bin with a printed QR code. Scanning the code opens the pickup
+// form with this bin's location, ID and waste stream filled in.
+model Bin {
+  id          Int         @id @default(autoincrement())
+  code        String      @unique // printed on the bin and encoded in its QR code
+  building    String
+  location    String
+  wasteStream WasteStream
+  notes       String?
+  createdAt   DateTime    @default(now())
+
+  @@map("bin")
+}

@@ -1,18 +1,19 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { distinctDrivers, filterQuery, parseFilter, searchRecords, type SearchParams } from "@/lib/records";
 import { shortDate } from "@/lib/time";
-import { importCsv } from "../actions";
+import { deleteRecord, importCsv } from "../actions";
 import FilterBar from "../FilterBar";
 import StatusChip from "../StatusChip";
 
 export const metadata = { title: "Pickup Records" };
 
 export default async function RecordsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  await requireAdmin();
+  const session = await requireUser();
   const sp = await searchParams;
   const filter = parseFilter(sp);
   const [records, drivers] = await Promise.all([searchRecords(filter), distinctDrivers()]);
   const skipped = Number(sp.skipped) || 0;
+  const returnTo = `/records${filterQuery(filter)}`;
 
   return (
     <main>
@@ -26,10 +27,12 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
       <FilterBar action="/records" filter={filter} drivers={drivers} />
 
       <div className="toolbar">
-        <form action={importCsv} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input type="file" name="file" accept=".csv" required />
-          <button className="btn btn-secondary" type="submit">Import CSV</button>
-        </form>
+        {session.role === "ADMIN" && (
+          <form action={importCsv} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input type="file" name="file" accept=".csv" required />
+            <button className="btn btn-secondary" type="submit">Import CSV</button>
+          </form>
+        )}
         <a className="btn" href={`/records/export.csv${filterQuery(filter)}`}>Export CSV</a>
       </div>
 
@@ -38,7 +41,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
           <thead>
             <tr>
               <th>Date</th><th>Building</th><th>Location</th><th>Bin ID</th><th>Driver</th><th>Stream</th>
-              <th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th><th>Comments</th>
+              <th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th><th>Comments</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -55,6 +58,13 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                 <td>{r.contamination}</td>
                 <td>{r.overflow ? "Yes" : "No"}</td>
                 <td>{r.comments}</td>
+                <td>
+                  <form action={deleteRecord}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <input type="hidden" name="returnTo" value={returnTo} />
+                    <button type="submit" className="btn-small btn-secondary" aria-label={`Delete pickup record ${r.id}`}>Delete</button>
+                  </form>
+                </td>
               </tr>
             ))}
           </tbody>

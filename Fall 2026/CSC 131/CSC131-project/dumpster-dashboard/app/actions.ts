@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { ContaminationLevel, WasteStream } from "@prisma/client";
 import { db } from "@/lib/db";
-import { clearSession, createSession, requireAdmin } from "@/lib/auth";
+import { clearSession, createSession, requireAdmin, requireUser } from "@/lib/auth";
 import { LOCATIONS } from "@/lib/catalog";
 import { CONTAMINATION_LEVELS, WASTE_STREAMS } from "@/lib/records";
 import { csvToRecords } from "@/lib/csv";
@@ -19,7 +19,7 @@ export async function login(form: FormData) {
   const password = String(form.get("password") ?? "");
   const user = await db.user.findUnique({ where: { username } });
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) redirect("/login?error=1");
-  await createSession({ username: user.username });
+  await createSession({ username: user.username, role: user.role });
   redirect("/");
 }
 
@@ -55,6 +55,13 @@ export async function createRecord(form: FormData) {
   redirect("/records/new?submitted=1");
 }
 
+export async function deleteRecord(form: FormData) {
+  await requireUser();
+  await db.pickupRecord.deleteMany({ where: { id: Number(str(form, "id")) } });
+  const returnTo = str(form, "returnTo");
+  redirect(returnTo.startsWith("/records") ? returnTo : "/records");
+}
+
 export async function importCsv(form: FormData) {
   await requireAdmin();
   const file = form.get("file");
@@ -63,6 +70,21 @@ export async function importCsv(form: FormData) {
   const { records, skipped } = csvToRecords(await file.text());
   if (records.length) await db.pickupRecord.createMany({ data: records });
   redirect(`/records?imported=${records.length}&skipped=${skipped}`);
+}
+
+export async function updateCostRates(form: FormData) {
+  await requireAdmin();
+  for (const stream of WASTE_STREAMS) {
+    const raw = str(form, `rate_${stream}`);
+    const usdPerPickup = Number(raw);
+    if (!Number.isFinite(usdPerPickup) || usdPerPickup < 0) redirect("/settings?error=1");
+    await db.costRate.upsert({
+      where: { wasteStream: stream },
+      update: { usdPerPickup },
+      create: { wasteStream: stream, usdPerPickup },
+    });
+  }
+  redirect("/settings?saved=1");
 }
 
 export async function createBin(form: FormData) {

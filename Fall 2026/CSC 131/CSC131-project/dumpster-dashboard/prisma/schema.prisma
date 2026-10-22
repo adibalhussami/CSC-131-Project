@@ -20,10 +20,18 @@ enum ContaminationLevel {
   A_LOT
 }
 
+// EMPLOYEE: view the dashboard and records, log/delete pickups.
+// ADMIN: everything EMPLOYEE can do, plus bin registry, cost page, and CSV import.
+enum UserRole {
+  EMPLOYEE
+  ADMIN
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
   passwordHash String // bcrypt hash, never the plain password
+  role         UserRole @default(EMPLOYEE)
   createdAt    DateTime @default(now())
 
   @@map("app_user")
@@ -45,6 +53,15 @@ model PickupRecord {
 
   @@index([collectionDate])
   @@map("pickup_record")
+}
+
+// Admin-editable $/pickup used by the Cost page (lib/costMetrics.ts). One row
+// per waste stream; lib/costs.ts falls back to a default if a row is missing.
+model CostRate {
+  wasteStream  WasteStream @id
+  usdPerPickup Float
+
+  @@map("cost_rate")
 }
 
 // A physical bin with a printed QR code. Scanning the code opens the pickup

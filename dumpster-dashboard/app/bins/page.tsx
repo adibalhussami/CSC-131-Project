@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { LOCATIONS } from "@/lib/catalog";
 import { WASTE_STREAMS } from "@/lib/records";
@@ -16,10 +16,11 @@ const ERRORS: Record<string, string> = {
 const binLabel = (b: { building: string; location: string; wasteStream: string }) => `${b.building} — ${b.location} · ${b.wasteStream}`;
 
 export default async function BinsPage({ searchParams }: { searchParams: Promise<{ created?: string; error?: string }> }) {
-  await requireAdmin();
+  const session = await requireUser();
+  const isAdmin = session.role === "ADMIN";
   const sp = await searchParams;
   const bins = await db.bin.findMany({ orderBy: { code: "asc" } });
-  const created = sp.created ? bins.find(b => b.code === sp.created) : undefined;
+  const created = isAdmin && sp.created ? bins.find(b => b.code === sp.created) : undefined;
 
   return (
     <main>
@@ -30,45 +31,47 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
       </p>
       {sp.error && <p className="banner banner-error">{ERRORS[sp.error] ?? "Couldn't save that bin."}</p>}
 
-      <div className="bins-layout">
-        <form className="record-form card" action={createBin}>
-          <h2 style={{ margin: 0 }}>Add a Bin</h2>
-          <div>
-            <label htmlFor="code">Bin ID</label>
-            <input id="code" name="code" type="text" required placeholder="e.g. CSUS-ALP-LF-01" pattern="[A-Za-z0-9._\-]{2,30}" autoCapitalize="characters" />
-          </div>
-          <div>
-            <label htmlFor="location">Location</label>
-            <select id="location" name="location" required defaultValue="">
-              <option value="" disabled>Select a location&hellip;</option>
-              {LOCATIONS.map((loc, i) => <option key={i} value={i}>{loc.building} — {loc.location}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="wasteStream">Waste Stream</label>
-            <select id="wasteStream" name="wasteStream" required>
-              {WASTE_STREAMS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="notes">Notes (optional)</label>
-            <input id="notes" name="notes" type="text" maxLength={200} placeholder="e.g. North entrance, blue toter" />
-          </div>
-          <button className="btn" type="submit">Save Bin &amp; Create QR Code</button>
-        </form>
+      {isAdmin && (
+        <div className="bins-layout">
+          <form className="record-form card" action={createBin}>
+            <h2 style={{ margin: 0 }}>Add a Bin</h2>
+            <div>
+              <label htmlFor="code">Bin ID</label>
+              <input id="code" name="code" type="text" required placeholder="e.g. CSUS-ALP-LF-01" pattern="[A-Za-z0-9._\-]{2,30}" autoCapitalize="characters" />
+            </div>
+            <div>
+              <label htmlFor="location">Location</label>
+              <select id="location" name="location" required defaultValue="">
+                <option value="" disabled>Select a location&hellip;</option>
+                {LOCATIONS.map((loc, i) => <option key={i} value={i}>{loc.building} — {loc.location}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="wasteStream">Waste Stream</label>
+              <select id="wasteStream" name="wasteStream" required>
+                {WASTE_STREAMS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="notes">Notes (optional)</label>
+              <input id="notes" name="notes" type="text" maxLength={200} placeholder="e.g. North entrance, blue toter" />
+            </div>
+            <button className="btn" type="submit">Save Bin &amp; Create QR Code</button>
+          </form>
 
-        {created && (
-          <div className="card">
-            <p className="banner" style={{ marginTop: 0 }}>Bin {created.code} added. Print its QR code:</p>
-            <QrCard code={created.code} label={binLabel(created)} />
-          </div>
-        )}
-      </div>
+          {created && (
+            <div className="card">
+              <p className="banner" style={{ marginTop: 0 }}>Bin {created.code} added. Print its QR code:</p>
+              <QrCard code={created.code} label={binLabel(created)} />
+            </div>
+          )}
+        </div>
+      )}
 
-      <div className="card table-wrap" style={{ marginTop: 24 }}>
+      <div className="card table-wrap" style={{ marginTop: isAdmin ? 24 : 0 }}>
         <table>
           <thead>
-            <tr><th>Bin ID</th><th>Building</th><th>Location</th><th>Stream</th><th>Notes</th><th>QR Code</th><th></th></tr>
+            <tr><th>Bin ID</th><th>Building</th><th>Location</th><th>Stream</th><th>Notes</th><th>QR Code</th>{isAdmin && <th></th>}</tr>
           </thead>
           <tbody>
             {bins.map(b => (
@@ -79,17 +82,19 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
                 <td>{b.wasteStream}</td>
                 <td>{b.notes}</td>
                 <td><QrToggle code={b.code} label={binLabel(b)} /></td>
-                <td>
-                  <form action={deleteBin}>
-                    <input type="hidden" name="id" value={b.id} />
-                    <button className="btn btn-secondary btn-small" type="submit">Remove</button>
-                  </form>
-                </td>
+                {isAdmin && (
+                  <td>
+                    <form action={deleteBin}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <button className="btn btn-secondary btn-small" type="submit">Remove</button>
+                    </form>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
-        {bins.length === 0 && <p className="empty-state">No bins registered yet. Add your first one above.</p>}
+        {bins.length === 0 && <p className="empty-state">No bins registered yet{isAdmin ? ". Add your first one above." : "."}</p>}
       </div>
     </main>
   );

@@ -10,13 +10,26 @@ It is hosted on **Vercel** with a **Neon** database.
 
 | Page | Who | What |
 |---|---|---|
-| `/` | Admin | Campus overview: filters, scorecards with sparklines, status/trend/building charts, top problem buildings, needs-attention list. Cards can be dragged and resized (saved per browser). |
+| `/` | Employee, Admin | Campus overview: filters, scorecards with sparklines, status/trend/building charts, top problem buildings, needs-attention list. Cards can be dragged and resized (saved per browser). |
 | `/records/new` | Anyone | Pickup form drivers fill out (no login needed). Has a **Scan Bin QR Code** button. |
-| `/records` | Admin | Every pickup, with filters, CSV import and CSV export. |
-| `/bins` | Admin | Register bins and print their QR codes. |
-| `/login` | — | Admin login. |
+| `/records` | Employee, Admin | Every pickup, with filters and CSV export, plus a **Delete** button per record. CSV import is admin-only. |
+| `/bins` | Employee (view), Admin (manage) | Bin registry and QR codes. Employees can view/print existing codes; only admins can add or remove bins. |
+| `/cost` | Employee, Admin | Estimated scheduled vs. actual pickup cost by building and waste stream, using the rates set on `/settings`. |
+| `/settings` | Admin | Edit the $/pickup rate used by the Cost page for each waste stream. |
+| `/login` | — | Employee/admin login. |
 
 Fullness status: GREEN 0–49%, YELLOW 50–79%, RED 80–100%. Times are shown in campus time (Pacific).
+
+### Roles
+
+Two account types, set via each user's `role` column:
+
+- **Employee** — dashboard, records (view, add, delete pickups), and
+  view-only access to Bins & QR Codes and Cost.
+- **Admin** — everything an employee can do, plus adding/removing bins, CSV
+  import, and the Settings page (cost-rate configuration).
+
+The pickup form at `/records/new` never requires a login, for either role.
 
 ## Run it on your computer
 
@@ -28,14 +41,11 @@ Fullness status: GREEN 0–49%, YELLOW 50–79%, RED 80–100%. Times are shown 
   - **Neon (easiest, nothing to install):** sign up at [neon.tech](https://neon.tech), create a
     project, and copy the connection strings from **Connect**. Making a separate `dev` branch in
     Neon keeps your test data away from the live site.
-  - **Postgres on your machine with Docker:**
-    ```bash
-    docker run -d --name dumpster-db -p 5432:5432 \
-      -e POSTGRES_USER=waste -e POSTGRES_PASSWORD=waste -e POSTGRES_DB=dumpster_dashboard \
-      postgres:16
-    ```
-    Your connection string is then
-    `postgresql://waste:waste@localhost:5432/dumpster_dashboard`.
+  - **Postgres on your machine with Docker:** run `docker compose up -d` in this
+    folder (uses `docker-compose.yml`). Your connection string is then
+    `postgresql://dashboard:dashboard@localhost:5433/dumpster_dashboard`
+    (port **5433**, not 5432 — picked to avoid clashing with a Postgres
+    install already using the default port).
 
 ### 2. Set up the project
 
@@ -54,6 +64,8 @@ Open `.env` and fill in:
 | `AUTH_SECRET` | Any long random string. Generate one with `openssl rand -base64 32` |
 | `ADMIN_USERNAME` | Admin login name (default `admin`) |
 | `ADMIN_PASSWORD` | Admin password, at least 8 characters |
+| `EMPLOYEE_USERNAME` | Optional employee login name |
+| `EMPLOYEE_PASSWORD` | Required if `EMPLOYEE_USERNAME` is set, at least 8 characters |
 
 `.env` holds passwords, so it is gitignored. Never commit it.
 
@@ -62,15 +74,16 @@ Open `.env` and fill in:
 ```bash
 npm install                # installs packages and generates the Prisma client
 npx prisma migrate deploy  # creates the tables
-npm run seed               # creates the admin login + 50 demo pickups and 4 demo bins
+npm run seed               # creates the admin (+ employee, if set) login, 50 demo pickups, 4 demo bins
 npm run dev                # starts the app
 ```
 
-Open **http://localhost:3000**, then log in with your `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
+Open **http://localhost:3000**, then log in with your `ADMIN_USERNAME` / `ADMIN_PASSWORD`
+(or `EMPLOYEE_USERNAME` / `EMPLOYEE_PASSWORD`, if set).
 The driver form is at http://localhost:3000/records/new and doesn't need a login.
 
 - Skip the demo data with `SEED_DEMO_DATA=false npm run seed`.
-- Change the admin password by editing `ADMIN_PASSWORD` in `.env` and running `npm run seed` again.
+- Change a password by editing it in `.env` and running `npm run seed` again.
 - Check for type errors with `npm run typecheck`.
 
 ### Troubleshooting
@@ -124,10 +137,15 @@ new folder under `prisma/migrations/`. Vercel applies it on the next deploy.
 ## Project layout
 
 ```
-app/            pages, server actions (actions.ts), chart + drag/resize components
-app/records/    records list, pickup form (+ QR scanner), CSV export route
-app/bins/       bin registry and QR code generator
-lib/            db client, auth (signed cookie), filters, metrics, CSV, campus time helpers
-lib/catalog.ts  campus building/location list (from the Service Overview spreadsheet)
-prisma/         schema, migrations, seed script
+app/              pages, server actions (actions.ts), chart + drag/resize components
+app/Sidebar.tsx   left nav (collapsible); app/AppShell.tsx wraps it around every page
+app/records/      records list (view/delete), pickup form (+ QR scanner), CSV export route
+app/bins/         bin registry and QR code generator (view for employees, manage for admins)
+app/cost/         scheduled vs. actual pickup cost by building/waste stream
+app/settings/     admin-only: edit the $/pickup rates used by the Cost page
+lib/              db client, auth (roles + signed cookie), filters, metrics, CSV, time helpers
+lib/catalog.ts    campus building/location list + weekly service levels (from the Service Overview spreadsheet)
+lib/costs.ts      $/pickup rates (read from the database; lib/costMetrics.ts computes the Cost page)
+prisma/           schema, migrations, seed script
+docker-compose.yml  local Postgres for development (see "Run it on your computer" above)
 ```

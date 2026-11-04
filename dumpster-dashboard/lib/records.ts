@@ -61,31 +61,3 @@ export const CONTAINER_SIZES = [
   "1YD", "2YD", "3YD", "4YD", "5YD", "6YD", "8YD", "10YD", "15YD", "20YD", "25YD", "30YD", "40YD",
   "60GAL", "90GAL", "96GAL", "5x4YD", "2x3YD", "64GAL / 6YD", "6YD / 25YD / 30YD",
 ];
-
-// The database has no columns for these survey answers yet, so they are saved as labeled
-// lines at the top of the comments field. Swap this for real columns once the schema has them.
-export function buildComments(a: { containerSize: string; serviceNotCompletedReason?: string; maintenanceIssue?: string; comments?: string }) {
-  return [
-    `Container: ${a.containerSize}`,
-    a.serviceNotCompletedReason && `Service NOT completed: ${a.serviceNotCompletedReason}`,
-    a.maintenanceIssue && `Maintenance/damage: ${a.maintenanceIssue}`,
-    a.comments && `Comments: ${a.comments}`,
-  ].filter(Boolean).join("\n");
-}
-
-// Reads the labeled lines written by buildComments. Records saved before the survey
-// had these questions have no labels, so everything stays in `comments`.
-export function parseSurveyComments(raw: string | null) {
-  const out = { containerSize: undefined as string | undefined, serviceNotCompletedReason: undefined as string | undefined, maintenanceIssue: undefined as string | undefined, comments: raw ?? "" };
-  if (!raw?.startsWith("Container: ")) return out;
-  const lines = raw.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    const l = lines[i];
-    if (l.startsWith("Container: ")) out.containerSize = l.slice("Container: ".length);
-    else if (l.startsWith("Service NOT completed: ")) out.serviceNotCompletedReason = l.slice("Service NOT completed: ".length);
-    else if (l.startsWith("Maintenance/damage: ")) out.maintenanceIssue = l.slice("Maintenance/damage: ".length);
-    else if (l.startsWith("Comments: ")) { out.comments = [l.slice("Comments: ".length), ...lines.slice(i + 1)].join("\n"); return out; }
-  }
-  out.comments = "";
-  return out;
-}

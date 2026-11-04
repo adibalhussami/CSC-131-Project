@@ -79,7 +79,7 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
 
         <div>
           <label htmlFor="comments">Comments (optional)</label>
-          <textarea id="comments" name="comments" rows={3} maxLength={400} />
+          <textarea id="comments" name="comments" rows={3} maxLength={1000} />
         </div>
 
         <button className="btn" type="submit">Log Pickup</button>

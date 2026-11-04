@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/auth";
-import { distinctDrivers, filterQuery, parseFilter, parseSurveyComments, searchRecords, type SearchParams } from "@/lib/records";
+import { distinctDrivers, filterQuery, parseFilter, searchRecords, type SearchParams } from "@/lib/records";
 import { shortDate } from "@/lib/time";
 import { deleteRecord, importCsv } from "../actions";
 import FilterBar from "../FilterBar";
@@ -46,10 +46,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
             </tr>
           </thead>
           <tbody>
-            {records.map(r => {
-              const s = parseSurveyComments(r.comments);
-              const answered = s.containerSize !== undefined;
-              return (
+            {records.map(r => (
               <tr key={r.id} className={r.overflow ? "needs-attention" : undefined}>
                 <td>{shortDate(r.collectionDate)}</td>
                 <td>{r.building}</td>
@@ -57,14 +54,14 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                 <td>{r.binId}</td>
                 <td>{r.driverName}</td>
                 <td>{r.wasteStream}</td>
-                <td>{s.containerSize}</td>
+                <td>{r.containerSize}</td>
                 <td>{r.fullnessPercent}%</td>
                 <td><StatusChip fullnessPercent={r.fullnessPercent} /></td>
                 <td>{r.contamination}</td>
                 <td>{r.overflow ? "Yes" : "No"}</td>
-                <td>{s.maintenanceIssue ? `Yes: ${s.maintenanceIssue}` : answered ? "No" : ""}</td>
-                <td>{s.serviceNotCompletedReason ? `No: ${s.serviceNotCompletedReason}` : answered ? "Yes" : ""}</td>
-                <td>{s.comments}</td>
+                <td>{r.maintenanceIssue ? `Yes: ${r.maintenanceNotes}` : "No"}</td>
+                <td>{r.serviceCompleted ? "Yes" : `No: ${r.serviceNotCompletedReason}`}</td>
+                <td>{r.comments}</td>
                 <td>
                   <form action={deleteRecord}>
                     <input type="hidden" name="id" value={r.id} />
@@ -73,8 +70,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                   </form>
                 </td>
               </tr>
-              );
-            })}
+            ))}
           </tbody>
         </table>
         {records.length === 0 && <p className="empty-state">No pickup records match these filters.</p>}

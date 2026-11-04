@@ -1,9 +1,11 @@
-// `npm run seed`: creates/updates the admin login from ADMIN_USERNAME/ADMIN_PASSWORD,
-// then adds 50 simulated pickups and a few demo bins (with QR codes) if those tables
-// are empty, like the Spring DataSeeder. Set SEED_DEMO_DATA=false to skip the demo data.
+// `npm run seed`: creates/updates the admin login from ADMIN_USERNAME/ADMIN_PASSWORD
+// and, if set, an employee login from EMPLOYEE_USERNAME/EMPLOYEE_PASSWORD, then adds
+// 50 simulated pickups and a few demo bins (with QR codes) if those tables are empty,
+// like the Spring DataSeeder. Set SEED_DEMO_DATA=false to skip the demo data.
 import { ContaminationLevel, PrismaClient, WasteStream } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { LOCATIONS } from "../lib/catalog";
+import { DEFAULT_COST_PER_PICKUP_USD } from "../lib/costs";
 
 const db = new PrismaClient();
 const SEED_COUNT = 50;
@@ -27,13 +29,32 @@ function contamination(roll: number): ContaminationLevel {
   return "A_LOT";
 }
 
-async function main() {
-  const username = (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase();
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password || password.length < 8) throw new Error("Set ADMIN_PASSWORD (8+ characters) before seeding.");
+async function upsertUser(username: string, password: string, role: "ADMIN" | "EMPLOYEE") {
   const passwordHash = await bcrypt.hash(password, 10);
-  await db.user.upsert({ where: { username }, update: { passwordHash }, create: { username, passwordHash } });
-  console.log(`Admin login ready: ${username}`);
+  await db.user.upsert({
+    where: { username },
+    update: { passwordHash, role },
+    create: { username, passwordHash, role },
+  });
+  console.log(`${role === "ADMIN" ? "Admin" : "Employee"} login ready: ${username}`);
+}
+
+async function main() {
+  const adminUsername = (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword.length < 8) throw new Error("Set ADMIN_PASSWORD (8+ characters) before seeding.");
+  await upsertUser(adminUsername, adminPassword, "ADMIN");
+
+  const employeeUsername = process.env.EMPLOYEE_USERNAME?.trim().toLowerCase();
+  const employeePassword = process.env.EMPLOYEE_PASSWORD;
+  if (employeeUsername) {
+    if (!employeePassword || employeePassword.length < 8) throw new Error("Set EMPLOYEE_PASSWORD (8+ characters) before seeding.");
+    await upsertUser(employeeUsername, employeePassword, "EMPLOYEE");
+  }
+
+  for (const [wasteStream, usdPerPickup] of Object.entries(DEFAULT_COST_PER_PICKUP_USD) as [WasteStream, number][]) {
+    await db.costRate.upsert({ where: { wasteStream }, update: {}, create: { wasteStream, usdPerPickup } });
+  }
 
   if (process.env.SEED_DEMO_DATA === "false") return;
 

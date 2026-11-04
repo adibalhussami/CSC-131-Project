@@ -4,6 +4,7 @@
     --banner-end: #9c3468;
     --card: #1e1b2e;
     --card-hover: #242037;
+    --sidebar-bg: #171420;
     --border: rgba(255, 255, 255, 0.08);
     --text: #f1eefb;
     --muted: #9a93bb;
@@ -32,55 +33,188 @@ a {
     color: var(--accent);
 }
 
-.app-topbar {
-    align-items: center;
-    background: linear-gradient(120deg, var(--banner-start), var(--banner-end));
+.app-shell {
     display: flex;
-    gap: 24px;
-    padding: 16px 28px;
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex: 0 0 232px;
+    flex-direction: column;
+    gap: 22px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 18px 14px;
+    position: sticky;
+    top: 0;
+    transition: flex-basis 0.15s ease, padding 0.15s ease, opacity 0.1s ease;
+}
+
+.sidebar-collapsed .app-sidebar {
+    border-right: 0;
+    flex-basis: 0;
+    opacity: 0;
+    padding-left: 0;
+    padding-right: 0;
+    pointer-events: none;
+}
+
+.sidebar-reopen {
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    height: 36px;
+    justify-content: center;
+    left: 14px;
+    position: fixed;
+    top: 14px;
+    width: 36px;
+    z-index: 60;
+}
+
+.sidebar-reopen:hover {
+    background: var(--card-hover);
+    color: var(--text);
+}
+
+.app-sidebar-header {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.sidebar-hide-btn {
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    flex-shrink: 0;
+    height: 32px;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+}
+
+.sidebar-hide-btn:hover {
+    background: var(--card-hover);
+    color: var(--text);
 }
 
 .app-brand {
+    align-items: center;
     color: #fff;
-    font-size: 1.1rem;
-    font-weight: 700;
+    display: flex;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
+    padding: 4px 6px;
     text-decoration: none;
+}
+
+.app-brand-mark {
+    align-items: center;
+    background: linear-gradient(135deg, var(--banner-start), var(--banner-end));
+    border-radius: 9px;
+    display: flex;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    height: 34px;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    width: 34px;
+}
+
+.app-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+.app-brand-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.app-brand-sub {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 600;
 }
 
 .app-nav-links {
     display: flex;
     flex: 1;
-    gap: 6px;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.app-nav-links a {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 999px;
-    color: #f3effc;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 7px 16px;
-    text-decoration: none;
+.app-sidebar-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
 }
 
-.app-nav-links a:hover {
-    background: rgba(255, 255, 255, 0.2);
+.sidebar-role-badge {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0 10px 8px;
+    text-transform: uppercase;
 }
 
-.app-nav-login form {
-    display: inline;
-}
-
-.app-nav-login button,
-.app-nav-login a {
-    background: rgba(0, 0, 0, 0.25);
+.nav-link {
+    align-items: center;
+    background: transparent;
     border: 0;
-    border-radius: 999px;
-    color: #fff;
+    border-radius: 8px;
+    color: var(--muted);
     cursor: pointer;
+    display: flex;
+    font-family: inherit;
+    font-size: 0.86rem;
     font-weight: 600;
-    padding: 7px 16px;
+    gap: 11px;
+    padding: 9px 10px;
+    text-align: left;
     text-decoration: none;
+    width: 100%;
+}
+
+.nav-link-button {
+    margin: 0;
+}
+
+.nav-link:hover {
+    background: var(--card-hover);
+    color: var(--text);
+}
+
+.nav-link.active {
+    background: var(--accent-soft);
+    color: var(--text);
+}
+
+.nav-icon {
+    flex-shrink: 0;
+    height: 18px;
+    width: 18px;
+}
+
+.app-content {
+    flex: 1;
+    min-width: 0;
 }
 
 main {
@@ -119,18 +253,15 @@ main {
 }
 
 .scorecards {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     margin-bottom: 24px;
 }
 
 .scorecard {
-    flex: 0 0 auto;
     height: 140px;
     min-height: 110px;
-    min-width: 170px;
-    width: 210px;
 }
 
 .scorecard .label {
@@ -145,25 +276,28 @@ main {
     margin-top: 6px;
 }
 
+.scorecard .sub {
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
 .scorecard .spark {
     height: 36px;
     margin-top: 10px;
 }
 
 .charts-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     margin-bottom: 24px;
 }
 
 .chart-card {
-    flex: 0 0 auto;
     position: relative;
     height: 340px;
     min-height: 260px;
-    min-width: 340px;
-    width: 460px;
 }
 
 .chart-card h2 {
@@ -426,16 +560,41 @@ form.record-form .checkbox-row input {
 
 /* Drivers log pickups from their phones. */
 @media (max-width: 700px) {
-    .app-topbar {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        flex-direction: row;
         flex-wrap: wrap;
-        gap: 12px;
-        padding: 14px 16px;
+        gap: 10px;
+        height: auto;
+        padding: 12px 14px;
+        position: static;
+    }
+
+    .app-brand {
+        flex: 1 1 auto;
     }
 
     .app-nav-links {
-        flex-basis: 100%;
+        flex: 1 1 100%;
+        flex-direction: row;
         flex-wrap: wrap;
         order: 3;
+    }
+
+    .nav-link {
+        width: auto;
+    }
+
+    .nav-link span {
+        display: none;
+    }
+
+    .app-sidebar-footer {
+        border-top: 0;
+        padding-top: 0;
     }
 
     main {

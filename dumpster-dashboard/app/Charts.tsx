@@ -66,6 +66,28 @@ export function BuildingChart({ data }: { data: Series }) {
   }} />;
 }
 
+export function CostComparisonChart({ scheduled, actual }: { scheduled: Series; actual: Series }) {
+  const labels = [...new Set([...Object.keys(scheduled), ...Object.keys(actual)])];
+  return <ChartCanvas config={{
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Scheduled $", data: labels.map(l => scheduled[l] ?? 0), backgroundColor: "rgba(139,123,247,0.5)" },
+        { label: "Actual $", data: labels.map(l => actual[l] ?? 0), backgroundColor: accent },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, ticks: { color: tickColor }, grid: { color: gridColor } },
+        x: { ticks: { color: tickColor }, grid: { color: gridColor } },
+      },
+      plugins: { legend },
+    },
+  }} />;
+}
+
 export function Sparkline({ data }: { data: Series }) {
   return <ChartCanvas className="spark-body" config={{
     type: "line",

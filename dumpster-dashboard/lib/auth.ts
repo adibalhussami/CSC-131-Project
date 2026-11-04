@@ -1,8 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { UserRole } from "@prisma/client";
 
-export type Session = { username: string };
+export type Session = { username: string; role: UserRole };
 const COOKIE = "session";
 
 function key() {
@@ -26,9 +27,16 @@ export async function getSession(): Promise<Session | null> {
   try { return (await jwtVerify(t, key())).payload as unknown as Session; } catch { return null; }
 }
 
-// Dashboard and records pages are admin-only; the pickup form stays public.
-export async function requireAdmin() {
+// Dashboard and records pages need a login (employee or admin); the pickup form stays public.
+export async function requireUser() {
   const s = await getSession();
   if (!s) redirect("/login");
+  return s;
+}
+
+// Bin registry, cost page and CSV import are admin-only.
+export async function requireAdmin() {
+  const s = await requireUser();
+  if (s.role !== "ADMIN") redirect("/");
   return s;
 }

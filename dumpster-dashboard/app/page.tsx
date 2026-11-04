@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { computeMetrics } from "@/lib/metrics";
 import { distinctDrivers, parseFilter, searchRecords, type SearchParams } from "@/lib/records";
 import { eyebrowDate, shortDate } from "@/lib/time";
@@ -8,7 +8,7 @@ import FilterBar from "./FilterBar";
 import StatusChip from "./StatusChip";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  await requireAdmin();
+  await requireUser();
   const filter = parseFilter(await searchParams);
   const [records, drivers] = await Promise.all([searchRecords(filter), distinctDrivers()]);
   const m = computeMetrics(records);

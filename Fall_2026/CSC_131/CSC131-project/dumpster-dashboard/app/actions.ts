@@ -6,7 +6,7 @@ import { ContaminationLevel, WasteStream } from "@prisma/client";
 import { db } from "@/lib/db";
 import { clearSession, createSession, requireAdmin } from "@/lib/auth";
 import { LOCATIONS } from "@/lib/catalog";
-import { CONTAMINATION_LEVELS, WASTE_STREAMS } from "@/lib/records";
+import { buildComments, CONTAINER_SIZES, CONTAMINATION_LEVELS, WASTE_STREAMS } from "@/lib/records";
 import { csvToRecords } from "@/lib/csv";
 import { BIN_CODE, normalizeCode } from "@/lib/bin-code";
 
@@ -35,8 +35,16 @@ export async function createRecord(form: FormData) {
   const wasteStream = str(form, "wasteStream") as WasteStream;
   const contamination = str(form, "contamination") as ContaminationLevel;
   const fullnessPercent = Number(str(form, "fullnessPercent"));
+  const containerSize = str(form, "containerSize");
+  const serviceCompleted = str(form, "serviceCompleted");
+  const maintenance = str(form, "maintenance");
+  const serviceNotCompletedReason = str(form, "serviceCompletedNote").slice(0, 200);
+  const maintenanceIssue = str(form, "maintenanceNote").slice(0, 200);
   if (!location || !driverName || !WASTE_STREAMS.includes(wasteStream) || !CONTAMINATION_LEVELS.includes(contamination)
-    || !Number.isInteger(fullnessPercent) || fullnessPercent < 0 || fullnessPercent > 100) {
+    || !Number.isInteger(fullnessPercent) || fullnessPercent < 0 || fullnessPercent > 100
+    || !CONTAINER_SIZES.includes(containerSize)
+    || !["yes", "no"].includes(serviceCompleted) || (serviceCompleted === "no" && !serviceNotCompletedReason)
+    || !["yes", "no"].includes(maintenance) || (maintenance === "yes" && !maintenanceIssue)) {
     redirect("/records/new?error=1");
   }
   await db.pickupRecord.create({
@@ -49,7 +57,12 @@ export async function createRecord(form: FormData) {
       fullnessPercent,
       contamination,
       overflow: form.get("overflow") === "true",
-      comments: str(form, "comments").slice(0, 1000) || null,
+      comments: buildComments({
+        containerSize,
+        serviceNotCompletedReason: serviceCompleted === "no" ? serviceNotCompletedReason : undefined,
+        maintenanceIssue: maintenance === "yes" ? maintenanceIssue : undefined,
+        comments: str(form, "comments").slice(0, 400),
+      }),
     },
   });
   redirect("/records/new?submitted=1");

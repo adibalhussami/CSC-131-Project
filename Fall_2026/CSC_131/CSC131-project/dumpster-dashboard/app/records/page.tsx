@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
-import { distinctDrivers, filterQuery, parseFilter, searchRecords, type SearchParams } from "@/lib/records";
+import { distinctDrivers, filterQuery, parseFilter, parseSurveyComments, searchRecords, type SearchParams } from "@/lib/records";
 import { shortDate } from "@/lib/time";
 import { importCsv } from "../actions";
 import FilterBar from "../FilterBar";
@@ -38,11 +38,15 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
           <thead>
             <tr>
               <th>Date</th><th>Building</th><th>Location</th><th>Bin ID</th><th>Driver</th><th>Stream</th>
-              <th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th><th>Comments</th>
+              <th>Size</th><th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th>
+              <th>Maintenance / Damage</th><th>Service Completed</th><th>Comments</th>
             </tr>
           </thead>
           <tbody>
-            {records.map(r => (
+            {records.map(r => {
+              const s = parseSurveyComments(r.comments);
+              const answered = s.containerSize !== undefined;
+              return (
               <tr key={r.id} className={r.overflow ? "needs-attention" : undefined}>
                 <td>{shortDate(r.collectionDate)}</td>
                 <td>{r.building}</td>
@@ -50,13 +54,17 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                 <td>{r.binId}</td>
                 <td>{r.driverName}</td>
                 <td>{r.wasteStream}</td>
+                <td>{s.containerSize}</td>
                 <td>{r.fullnessPercent}%</td>
                 <td><StatusChip fullnessPercent={r.fullnessPercent} /></td>
                 <td>{r.contamination}</td>
                 <td>{r.overflow ? "Yes" : "No"}</td>
-                <td>{r.comments}</td>
+                <td>{s.maintenanceIssue ? `Yes: ${s.maintenanceIssue}` : answered ? "No" : ""}</td>
+                <td>{s.serviceNotCompletedReason ? `No: ${s.serviceNotCompletedReason}` : answered ? "Yes" : ""}</td>
+                <td>{s.comments}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         {records.length === 0 && <p className="empty-state">No pickup records match these filters.</p>}

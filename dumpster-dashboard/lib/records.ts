@@ -56,3 +56,8 @@ export async function distinctDrivers() {
   const rows = await db.pickupRecord.findMany({ distinct: ["driverName"], select: { driverName: true }, orderBy: { driverName: "asc" } });
   return rows.map(r => r.driverName);
 }
+
+export const CONTAINER_SIZES = [
+  "1YD", "2YD", "3YD", "4YD", "5YD", "6YD", "8YD", "10YD", "15YD", "20YD", "25YD", "30YD", "40YD",
+  "60GAL", "90GAL", "96GAL", "5x4YD", "2x3YD", "64GAL / 6YD", "6YD / 25YD / 30YD",
+];

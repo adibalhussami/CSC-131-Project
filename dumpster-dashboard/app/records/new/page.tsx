@@ -1,8 +1,9 @@
 import { LOCATIONS } from "@/lib/catalog";
-import { CONTAMINATION_LEVELS, WASTE_STREAMS } from "@/lib/records";
+import { CONTAINER_SIZES, CONTAMINATION_LEVELS, WASTE_STREAMS } from "@/lib/records";
 import { findBin, locationIndex } from "@/lib/bins";
 import { createRecord } from "../../actions";
 import QrScanner from "./QrScanner";
+import YesNoQuestion from "./YesNoQuestion";
 
 export const metadata = { title: "Log a Pickup" };
 
@@ -48,6 +49,14 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
         </div>
 
         <div>
+          <label htmlFor="containerSize">Container Type / Size</label>
+          <select id="containerSize" name="containerSize" required defaultValue="">
+            <option value="" disabled>Select a size&hellip;</option>
+            {CONTAINER_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div>
           <label htmlFor="fullnessPercent">Fullness (%)</label>
           <input id="fullnessPercent" name="fullnessPercent" type="number" min={0} max={100} required />
         </div>
@@ -63,6 +72,10 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
           <input id="overflow" name="overflow" type="checkbox" value="true" />
           <label htmlFor="overflow" style={{ margin: 0 }}>Bin is overflowing / waste outside the bin</label>
         </div>
+
+        <YesNoQuestion name="serviceCompleted" label="Was the service completed?" explainWhen="no" explainLabel="Why wasn't the service completed?" />
+
+        <YesNoQuestion name="maintenance" label="Is there a maintenance issue or damaged bin?" explainWhen="yes" explainLabel="Describe the issue" />
 
         <div>
           <label htmlFor="comments">Comments (optional)</label>

@@ -51,6 +51,13 @@ model PickupRecord {
   overflow        Boolean            @default(false)
   comments        String?            @db.VarChar(1000)
 
+  // Survey answers. Null/default on records logged before these questions existed.
+  containerSize             String?
+  serviceCompleted          Boolean @default(true)
+  serviceNotCompletedReason String? @db.VarChar(200)
+  maintenanceIssue          Boolean @default(false)
+  maintenanceNotes          String? @db.VarChar(200)
+
   @@index([collectionDate])
   @@map("pickup_record")
 }

@@ -41,7 +41,8 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
           <thead>
             <tr>
               <th>Date</th><th>Building</th><th>Location</th><th>Bin ID</th><th>Driver</th><th>Stream</th>
-              <th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th><th>Comments</th><th></th>
+              <th>Size</th><th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th>
+              <th>Maintenance / Damage</th><th>Service Completed</th><th>Comments</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -53,10 +54,13 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                 <td>{r.binId}</td>
                 <td>{r.driverName}</td>
                 <td>{r.wasteStream}</td>
+                <td>{r.containerSize}</td>
                 <td>{r.fullnessPercent}%</td>
                 <td><StatusChip fullnessPercent={r.fullnessPercent} /></td>
                 <td>{r.contamination}</td>
                 <td>{r.overflow ? "Yes" : "No"}</td>
+                <td>{r.maintenanceIssue ? `Yes: ${r.maintenanceNotes}` : "No"}</td>
+                <td>{r.serviceCompleted ? "Yes" : `No: ${r.serviceNotCompletedReason}`}</td>
                 <td>{r.comments}</td>
                 <td>
                   <form action={deleteRecord}>

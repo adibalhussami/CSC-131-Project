@@ -21,18 +21,33 @@ enum ContaminationLevel {
 }
 
 // EMPLOYEE: view the dashboard and records, log/delete pickups.
-// ADMIN: everything EMPLOYEE can do, plus bin registry, cost page, and CSV import.
+// ADMIN: everything EMPLOYEE can do, plus bin registry, settings, drivers and CSV import.
+// DRIVER: signs in with a username + 6-digit PIN and can only log pickups.
 enum UserRole {
   EMPLOYEE
   ADMIN
+  DRIVER
 }
 
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
-  passwordHash String // bcrypt hash, never the plain password
+  passwordHash String? // bcrypt hash, never the plain password. Null for drivers (PIN only).
   role         UserRole @default(EMPLOYEE)
   createdAt    DateTime @default(now())
+
+  // Drivers: the name stamped on their pickups, and a bcrypt-hashed PIN.
+  displayName    String?
+  pinHash        String?
+  active         Boolean   @default(true)
+  // Bumped when a PIN is reset or the driver is deactivated, which signs out
+  // every phone that driver was logged in on.
+  sessionVersion Int       @default(0)
+  failedLogins   Int       @default(0)
+  lockedUntil    DateTime?
+  lastLoginAt    DateTime?
+
+  pickups PickupRecord[]
 
   @@map("app_user")
 }
@@ -45,6 +60,10 @@ model PickupRecord {
   location        String
   binId           String?
   driverName      String
+  // Set when a signed-in driver logs the pickup. Older and imported records
+  // only have driverName.
+  driverId        Int?
+  driver          User?              @relation(fields: [driverId], references: [id], onDelete: SetNull)
   wasteStream     WasteStream
   fullnessPercent Int
   contamination   ContaminationLevel
@@ -58,7 +77,11 @@ model PickupRecord {
   maintenanceIssue          Boolean @default(false)
   maintenanceNotes          String? @db.VarChar(200)
 
+  // Created by `npm run seed`. Settings > Data can delete just these.
+  isDemo Boolean @default(false)
+
   @@index([collectionDate])
+  @@index([driverId])
   @@map("pickup_record")
 }
 
@@ -79,8 +102,11 @@ model Bin {
   building    String
   location    String
   wasteStream WasteStream
-  notes       String?
-  createdAt   DateTime    @default(now())
+  // Filled in automatically on the pickup form when this bin is scanned.
+  containerSize String?
+  notes         String?
+  isDemo        Boolean     @default(false)
+  createdAt     DateTime    @default(now())
 
   @@map("bin")
 }

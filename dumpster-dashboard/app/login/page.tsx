@@ -1,12 +1,12 @@
 import { login } from "../actions";
 
-export const metadata = { title: "Admin Login" };
+export const metadata = { title: "Staff Login" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; logout?: string }> }) {
   const sp = await searchParams;
   return (
     <main className="login-panel">
-      <h1 className="page-title">Admin Login</h1>
+      <h1 className="page-title">Staff Login</h1>
       {sp.error && <p className="login-message">Invalid username or password.</p>}
       {sp.logout && <p className="login-message" style={{ color: "var(--muted)" }}>You have been logged out.</p>}
       <form action={login}>
@@ -16,6 +16,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <input id="password" name="password" type="password" autoComplete="current-password" required />
         <button type="submit">Log In</button>
       </form>
+      <p className="login-switch">Driver? <a href="/driver/login">Sign in with your PIN</a></p>
     </main>
   );
 }

@@ -48,6 +48,15 @@ function IconQr({ className }: IconProps) {
   );
 }
 
+function IconMap({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 17.5s-5.5-5-5.5-9.2a5.5 5.5 0 0 1 11 0c0 4.2-5.5 9.2-5.5 9.2z" />
+      <circle cx="10" cy="8.2" r="2" />
+    </svg>
+  );
+}
+
 function IconCost({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -85,18 +94,24 @@ function IconSettings({ className }: IconProps) {
   );
 }
 
+const STAFF: UserRole[] = ["EMPLOYEE", "ADMIN"];
+const EVERYONE: UserRole[] = ["EMPLOYEE", "ADMIN", "DRIVER"];
+
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", Icon: IconDashboard, adminOnly: false },
-  { href: "/records/new", label: "Log a Pickup", Icon: IconPlus, adminOnly: false },
-  { href: "/records", label: "All Records", Icon: IconList, adminOnly: false },
-  { href: "/bins", label: "Bins & QR Codes", Icon: IconQr, adminOnly: false },
-  { href: "/cost", label: "Cost", Icon: IconCost, adminOnly: false },
-  { href: "/settings", label: "Settings", Icon: IconSettings, adminOnly: true },
+  { href: "/", label: "Dashboard", Icon: IconDashboard, roles: STAFF },
+  { href: "/records/new", label: "Log a Pickup", Icon: IconPlus, roles: EVERYONE },
+  { href: "/records", label: "All Records", Icon: IconList, roles: STAFF },
+  { href: "/map", label: "Campus Map", Icon: IconMap, roles: EVERYONE },
+  { href: "/bins", label: "Bins & QR Codes", Icon: IconQr, roles: STAFF },
+  { href: "/cost", label: "Cost", Icon: IconCost, roles: STAFF },
+  { href: "/settings", label: "Settings", Icon: IconSettings, roles: ["ADMIN"] as UserRole[] },
 ];
+
+const ROLE_LABEL: Record<UserRole, string> = { ADMIN: "Admin", EMPLOYEE: "Employee", DRIVER: "Driver" };
 
 export default function Sidebar({ loggedIn, role, onToggle }: { loggedIn: boolean; role: UserRole | null; onToggle: () => void }) {
   const pathname = usePathname();
-  const navItems = NAV_ITEMS.filter(item => !item.adminOnly || role === "ADMIN");
+  const navItems = NAV_ITEMS.filter(item => role && item.roles.includes(role));
 
   return (
     <aside className="app-sidebar">
@@ -128,7 +143,7 @@ export default function Sidebar({ loggedIn, role, onToggle }: { loggedIn: boolea
       <div className="app-sidebar-footer">
         {loggedIn ? (
           <>
-            <div className="sidebar-role-badge">{role === "ADMIN" ? "Admin" : "Employee"}</div>
+            <div className="sidebar-role-badge">{role ? ROLE_LABEL[role] : ""}</div>
             <form action={logout}>
               <button type="submit" className="nav-link nav-link-button">
                 <IconLogout className="nav-icon" />
@@ -137,10 +152,16 @@ export default function Sidebar({ loggedIn, role, onToggle }: { loggedIn: boolea
             </form>
           </>
         ) : (
-          <a href="/login" className="nav-link">
-            <IconLogout className="nav-icon" />
-            <span>Admin Login</span>
-          </a>
+          <>
+            <a href="/driver/login" className="nav-link">
+              <IconLogout className="nav-icon" />
+              <span>Driver Sign-in</span>
+            </a>
+            <a href="/login" className="nav-link">
+              <IconLogout className="nav-icon" />
+              <span>Staff Login</span>
+            </a>
+          </>
         )}
       </div>
     </aside>

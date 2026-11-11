@@ -8,10 +8,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build",
-    "postinstall": "prisma generate",
+    "vercel-build": "node scripts/copy-maplibre-worker.mjs && prisma generate && prisma migrate deploy && next build",
+    "postinstall": "prisma generate && node scripts/copy-maplibre-worker.mjs",
     "seed": "prisma db seed",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "map:buildings": "node scripts/fetch-campus-buildings.mjs",
+    "map:paths": "node scripts/fetch-campus-paths.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -22,6 +24,7 @@
     "chart.js": "^4.4.0",
     "jose": "^5.10.0",
     "jsqr": "^1.4.0",
+    "maplibre-gl": "^6.16.0",
     "next": "^15.5.0",
     "qrcode": "^1.5.4",
     "react": "^19.1.0",

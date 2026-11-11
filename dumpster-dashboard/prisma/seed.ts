@@ -2,6 +2,9 @@
 // and, if set, an employee login from EMPLOYEE_USERNAME/EMPLOYEE_PASSWORD, then adds
 // 50 simulated pickups and a few demo bins (with QR codes) if those tables are empty,
 // like the Spring DataSeeder. Set SEED_DEMO_DATA=false to skip the demo data.
+// Everything it creates is flagged isDemo, so Settings > Data can remove it later.
+// If DRIVER_USERNAME and DRIVER_PIN are set, it also creates/updates that driver
+// login (handy for local testing; real drivers are added on Settings).
 import { ContaminationLevel, PrismaClient, WasteStream } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { LOCATIONS } from "../lib/catalog";
@@ -39,6 +42,17 @@ async function upsertUser(username: string, password: string, role: "ADMIN" | "E
   console.log(`${role === "ADMIN" ? "Admin" : "Employee"} login ready: ${username}`);
 }
 
+async function upsertDriver(username: string, pin: string, displayName: string) {
+  if (!/^\d{6}$/.test(pin)) throw new Error("DRIVER_PIN must be exactly 6 digits.");
+  const pinHash = await bcrypt.hash(pin, 10);
+  await db.user.upsert({
+    where: { username },
+    update: { pinHash, displayName, role: "DRIVER", active: true, sessionVersion: { increment: 1 } },
+    create: { username, pinHash, displayName, role: "DRIVER" },
+  });
+  console.log(`Driver login ready: ${username}`);
+}
+
 async function main() {
   const adminUsername = (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -52,6 +66,11 @@ async function main() {
     await upsertUser(employeeUsername, employeePassword, "EMPLOYEE");
   }
 
+  const driverUsername = process.env.DRIVER_USERNAME?.trim().toLowerCase();
+  if (driverUsername) {
+    await upsertDriver(driverUsername, process.env.DRIVER_PIN?.trim() ?? "", process.env.DRIVER_NAME?.trim() || driverUsername);
+  }
+
   for (const [wasteStream, usdPerPickup] of Object.entries(DEFAULT_COST_PER_PICKUP_USD) as [WasteStream, number][]) {
     await db.costRate.upsert({ where: { wasteStream }, update: {}, create: { wasteStream, usdPerPickup } });
   }
@@ -59,15 +78,15 @@ async function main() {
   if (process.env.SEED_DEMO_DATA === "false") return;
 
   if ((await db.bin.count()) === 0) {
-    const demoBins: [string, string, WasteStream][] = [
-      ["LIB-CP-LF-01", "LIBRARY CP", "LANDFILL"],
-      ["LIB-CP-RC-01", "LIBRARY CP", "RECYCLING"],
-      ["UNION-OR-01", "UNIVERSITY UNION", "ORGANICS"],
-      ["ALP-LF-01", "ALPINE", "LANDFILL"],
+    const demoBins: [string, string, WasteStream, string][] = [
+      ["LIB-CP-LF-01", "LIBRARY CP", "LANDFILL", "4YD"],
+      ["LIB-CP-RC-01", "LIBRARY CP", "RECYCLING", "3YD"],
+      ["UNION-OR-01", "UNIVERSITY UNION", "ORGANICS", "96GAL"],
+      ["ALP-LF-01", "ALPINE", "LANDFILL", "6YD"],
     ];
-    for (const [code, location, wasteStream] of demoBins) {
+    for (const [code, location, wasteStream, containerSize] of demoBins) {
       const loc = LOCATIONS.find(l => l.location === location)!;
-      await db.bin.create({ data: { code, building: loc.building, location: loc.location, wasteStream } });
+      await db.bin.create({ data: { code, building: loc.building, location: loc.location, wasteStream, containerSize, isDemo: true } });
     }
     console.log(`Seeded ${demoBins.length} demo bins.`);
   }
@@ -91,6 +110,7 @@ async function main() {
         contamination: contamination(random(10)),
         overflow,
         comments: overflow ? "Waste piled outside the bin." : null,
+        isDemo: true,
       };
     }),
   });

@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { LOCATIONS } from "@/lib/catalog";
-import { WASTE_STREAMS } from "@/lib/records";
+import { CONTAINER_SIZES, WASTE_STREAMS } from "@/lib/records";
 import { createBin, deleteBin } from "../actions";
 import QrCard, { QrToggle } from "./QrCard";
 
@@ -26,8 +26,9 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
     <main>
       <h1 className="page-title">Bins &amp; QR Codes</h1>
       <p className="page-intro">
-        Register each bin, then print its QR code and stick it on the bin. Scanning the code opens the
-        pickup form with the bin&apos;s location, ID and waste stream already filled in.
+        Register each bin, then print its QR code and stick it on the bin. When a signed-in driver scans
+        the code, the pickup form locks in the bin&apos;s location, ID, waste stream and container size, so
+        they only answer questions about its condition.
       </p>
       {sp.error && <p className="banner banner-error">{ERRORS[sp.error] ?? "Couldn't save that bin."}</p>}
 
@@ -53,6 +54,13 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
               </select>
             </div>
             <div>
+              <label htmlFor="containerSize">Container Size</label>
+              <select id="containerSize" name="containerSize" defaultValue="">
+                <option value="">Ask the driver each time</option>
+                {CONTAINER_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
               <label htmlFor="notes">Notes (optional)</label>
               <input id="notes" name="notes" type="text" maxLength={200} placeholder="e.g. North entrance, blue toter" />
             </div>
@@ -71,7 +79,7 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
       <div className="card table-wrap" style={{ marginTop: isAdmin ? 24 : 0 }}>
         <table>
           <thead>
-            <tr><th>Bin ID</th><th>Building</th><th>Location</th><th>Stream</th><th>Notes</th><th>QR Code</th>{isAdmin && <th></th>}</tr>
+            <tr><th>Bin ID</th><th>Building</th><th>Location</th><th>Stream</th><th>Size</th><th>Notes</th><th>QR Code</th>{isAdmin && <th></th>}</tr>
           </thead>
           <tbody>
             {bins.map(b => (
@@ -80,7 +88,8 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
                 <td>{b.building}</td>
                 <td>{b.location}</td>
                 <td>{b.wasteStream}</td>
-                <td>{b.notes}</td>
+                <td>{b.containerSize ?? "—"}</td>
+                <td>{b.notes}{b.isDemo && <span className="demo-tag">demo</span>}</td>
                 <td><QrToggle code={b.code} label={binLabel(b)} /></td>
                 {isAdmin && (
                   <td>

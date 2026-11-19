@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { distinctDrivers, filterQuery, parseFilter, searchRecords, type SearchParams } from "@/lib/records";
 import { shortDate } from "@/lib/time";
 import { deleteRecord, importCsv } from "../actions";
@@ -12,6 +13,10 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const filter = parseFilter(sp);
   const [records, drivers] = await Promise.all([searchRecords(filter), distinctDrivers()]);
+  // Only which records have a photo; the images themselves load from /records/photo?id=.
+  const withPhoto = new Set((await db.pickupPhoto.findMany({
+    where: { recordId: { in: records.map(r => r.id) } }, select: { recordId: true },
+  })).map(p => p.recordId));
   const skipped = Number(sp.skipped) || 0;
   const returnTo = `/records${filterQuery(filter)}`;
 
@@ -42,7 +47,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
             <tr>
               <th>Date</th><th>Building</th><th>Location</th><th>Bin ID</th><th>Driver</th><th>Stream</th>
               <th>Size</th><th>Fullness</th><th>Status</th><th>Contamination</th><th>Overflow</th>
-              <th>Maintenance / Damage</th><th>Service Completed</th><th>Comments</th><th></th>
+              <th>Maintenance / Damage</th><th>Service Completed</th><th>Photo</th><th>Comments</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -61,6 +66,13 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                 <td>{r.overflow ? "Yes" : "No"}</td>
                 <td>{r.maintenanceIssue ? `Yes: ${r.maintenanceNotes}` : "No"}</td>
                 <td>{r.serviceCompleted ? "Yes" : `No: ${r.serviceNotCompletedReason}`}</td>
+                <td>
+                  {withPhoto.has(r.id) && (
+                    <a href={`/records/photo?id=${r.id}`} target="_blank" rel="noopener">
+                      <img className="record-photo" src={`/records/photo?id=${r.id}`} alt={`Bin photo for pickup ${r.id}`} loading="lazy" />
+                    </a>
+                  )}
+                </td>
                 <td>{r.comments}</td>
                 <td>
                   <form action={deleteRecord}>

@@ -1287,6 +1287,31 @@ form.record-form .fullness-option input {
     text-transform: uppercase;
 }
 
+/* Bin photo: preview on the pickup form, thumbnail on the records page. */
+.photo-note {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin: 6px 0 0;
+}
+
+.photo-preview {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: block;
+    margin-top: 8px;
+    max-height: 240px;
+    max-width: 100%;
+}
+
+.record-photo {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: block;
+    height: 56px;
+    object-fit: cover;
+    width: 56px;
+}
+
 /* --- Settings --- */
 
 .settings-grid {

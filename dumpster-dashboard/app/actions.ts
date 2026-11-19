@@ -20,6 +20,11 @@ const locationAt = (f: FormData) => { const v = str(f, "location"); return /^\d+
 const MAX_PIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
 
+// Bin photos are shrunk in the browser (PhotoField.tsx); this cap stays under the 4 MB
+// server-action limit in next.config.ts for the rest of the form.
+const MAX_PHOTO_BYTES = 3.5 * 1024 * 1024;
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 // Staff (admin/employee) sign-in with username + password.
 export async function login(form: FormData) {
   const username = str(form, "username").toLowerCase();
@@ -86,7 +91,11 @@ export async function createRecord(form: FormData) {
   const maintenance = str(form, "maintenance");
   const serviceNotCompletedReason = str(form, "serviceCompletedNote").slice(0, 200);
   const maintenanceNotes = str(form, "maintenanceNote").slice(0, 200);
-  if (!location || !WASTE_STREAMS.includes(wasteStream) || !CONTAMINATION_LEVELS.includes(contamination)
+  // typeof check rather than `instanceof File`: File isn't a global on Node 18.
+  const photo = form.get("photo");
+  const photoOk = !!photo && typeof photo !== "string" && photo.size > 0 && photo.size <= MAX_PHOTO_BYTES
+    && PHOTO_TYPES.includes(photo.type);
+  if (!photoOk || !location || !WASTE_STREAMS.includes(wasteStream) || !CONTAMINATION_LEVELS.includes(contamination)
     || !Number.isInteger(fullnessPercent) || fullnessPercent < 0 || fullnessPercent > 100
     || !CONTAINER_SIZES.includes(containerSize)
     || !["yes", "no"].includes(serviceCompleted) || (serviceCompleted === "no" && !serviceNotCompletedReason)
@@ -111,6 +120,7 @@ export async function createRecord(form: FormData) {
       serviceNotCompletedReason: serviceCompleted === "no" ? serviceNotCompletedReason : null,
       maintenanceIssue: maintenance === "yes",
       maintenanceNotes: maintenance === "yes" ? maintenanceNotes : null,
+      photo: { create: { contentType: (photo as File).type, data: new Uint8Array(await (photo as File).arrayBuffer()) } },
     },
   });
   redirect("/records/new?submitted=1");

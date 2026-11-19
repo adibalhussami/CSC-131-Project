@@ -80,9 +80,25 @@ model PickupRecord {
   // Created by `npm run seed`. Settings > Data can delete just these.
   isDemo Boolean @default(false)
 
+  // Bin photo from the pickup form. Required for new pickups; older records have none.
+  photo PickupPhoto?
+
   @@index([collectionDate])
   @@index([driverId])
   @@map("pickup_record")
+}
+
+// Kept in its own table so the many queries that list pickups never load image data.
+// Shrunk in the browser before upload (app/records/new/PhotoField.tsx).
+model PickupPhoto {
+  id          Int          @id @default(autoincrement())
+  recordId    Int          @unique
+  record      PickupRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  contentType String
+  data        Bytes
+  createdAt   DateTime     @default(now())
+
+  @@map("pickup_photo")
 }
 
 // Admin-editable $/pickup used by the Cost page (lib/costMetrics.ts). One row

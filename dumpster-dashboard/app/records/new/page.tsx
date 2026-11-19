@@ -5,6 +5,7 @@ import { CONTAINER_SIZES, CONTAMINATION_LEVELS, WASTE_STREAMS, statusOf } from "
 import { findBin } from "@/lib/bins";
 import { shortDate } from "@/lib/time";
 import { createRecord } from "../../actions";
+import PhotoField from "./PhotoField";
 import QrScanner from "./QrScanner";
 import YesNoQuestion from "./YesNoQuestion";
 
@@ -118,6 +119,8 @@ export default async function NewRecordPage({ searchParams }: { searchParams: Pr
         <YesNoQuestion name="serviceCompleted" label="Was the service completed?" explainWhen="no" explainLabel="Why wasn't the service completed?" />
 
         <YesNoQuestion name="maintenance" label="Is there a maintenance issue or damaged bin?" explainWhen="yes" explainLabel="Describe the issue" />
+
+        <PhotoField />
 
         <div>
           <label htmlFor="comments">Comments (optional)</label>

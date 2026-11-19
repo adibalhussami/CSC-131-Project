@@ -14,5 +14,5 @@
 
 ## 4. Replace the `.claude` folders with one Markdown file
 - [x] Delete the `.claude` folders from this repository
-- [ ] Move any useful project info from them into one Markdown file with a neutral name that doesn't mention Claude (for example `PROJECT_NOTES.md`)
+- [x] Move any useful project info from them into one Markdown file with a neutral name that doesn't mention Claude (`../../.claude/PROJECT_NOTES.md`, outside the repo)
 - [ ] The file is not loaded automatically; Claude only reads it when told it's there
